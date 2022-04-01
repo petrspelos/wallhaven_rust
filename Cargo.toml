@@ -12,3 +12,4 @@ reqwest = { version = "0.10", features = ["json", "blocking"] }
 rand = "0.7.2"
 image = "0.24.1"
 wallpaper = "3.2.0"
+clap = { version = "3.1.7", features = ["derive"] }

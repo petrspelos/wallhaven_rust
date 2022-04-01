@@ -1,3 +1,4 @@
+use clap::Parser;
 use rand::seq::SliceRandom;
 use serde::Deserialize;
 
@@ -13,8 +14,17 @@ struct Wallpaper {
     path: String,
 }
 
+#[derive(Parser, Debug)]
+#[clap(author, version, about, long_about = None)]
+struct Args {
+    #[clap(short, long)]
+    download_only: bool,
+}
+
 #[tokio::main]
 async fn main() -> Result<(), reqwest::Error> {
+    let args = Args::parse();
+
     let api_url = "https://wallhaven.cc/api/v1/search";
     let walls: Wallpapers = reqwest::blocking::get(api_url)?.json()?;
 
@@ -34,6 +44,10 @@ async fn main() -> Result<(), reqwest::Error> {
         .unwrap()
         .save_with_format(&wallpaper_path, image_format)
         .unwrap();
+
+    if args.download_only {
+        return Ok(());
+    }
 
     let full_wallpaper_path = format!(
         "{}\\{}",
