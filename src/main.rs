@@ -32,9 +32,9 @@ async fn main() -> Result<(), reqwest::Error> {
 
     let extension = &picked_wallpaper.path[picked_wallpaper.path.len() - 3..];
 
-    let image_format: image::ImageFormat = match &extension {
-        &"png" => image::ImageFormat::Png,
-        &"jpg" => image::ImageFormat::Jpeg,
+    let image_format: image::ImageFormat = match extension {
+        "png" => image::ImageFormat::Png,
+        "jpg" => image::ImageFormat::Jpeg,
         _ => image::ImageFormat::Jpeg,
     };
 
