@@ -15,32 +15,31 @@ struct Wallpaper {
 
 #[tokio::main]
 async fn main() -> Result<(), reqwest::Error> {
-    let walls = get_wallpapers().await.expect("");
+    let api_url = "https://wallhaven.cc/api/v1/search";
+    let walls: Wallpapers = reqwest::blocking::get(api_url)?.json()?;
 
-    let picked_wallpaper = match walls.data.choose(&mut rand::thread_rng()) {
-        Some(wall) => wall,
-        None => panic!("whoa"),
-    };
+    let picked_wallpaper = walls.data.choose(&mut rand::thread_rng()).unwrap();
 
     let extension = &picked_wallpaper.path[picked_wallpaper.path.len() - 3..];
+
     let image_format: image::ImageFormat = match &extension {
         &"png" => image::ImageFormat::Png,
         &"jpg" => image::ImageFormat::Jpeg,
         _ => image::ImageFormat::Jpeg,
     };
+
     let img_bytes = reqwest::blocking::get(&picked_wallpaper.path)?.bytes()?;
     let wallpaper_path = format!("wallpaper.{}", extension);
     image::load_from_memory(&img_bytes)
-        .expect("to work")
+        .unwrap()
         .save_with_format(&wallpaper_path, image_format)
-        .expect("to work");
+        .unwrap();
 
     let full_wallpaper_path = format!(
         "{}\\{}",
         std::env::current_dir().unwrap().display(),
         wallpaper_path
     );
-    println!("about to set {}", full_wallpaper_path);
 
     wallpaper::set_from_path(&full_wallpaper_path).unwrap();
 
@@ -50,12 +49,4 @@ async fn main() -> Result<(), reqwest::Error> {
     );
 
     Ok(())
-}
-
-async fn get_wallpapers() -> Result<Wallpapers, reqwest::Error> {
-    let api_url = "https://wallhaven.cc/api/v1/search";
-
-    let wallpapers: Wallpapers = reqwest::blocking::get(api_url)?.json()?;
-
-    Ok(wallpapers)
 }
