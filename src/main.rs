@@ -21,8 +21,7 @@ struct Args {
     download_only: bool,
 }
 
-#[tokio::main]
-async fn main() -> Result<(), reqwest::Error> {
+fn main() -> Result<(), reqwest::Error> {
     let args = Args::parse();
 
     let api_url = "https://wallhaven.cc/api/v1/search";
