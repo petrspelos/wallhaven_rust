@@ -9,8 +9,6 @@ struct Wallpapers {
 
 #[derive(Deserialize)]
 struct Wallpaper {
-    purity: String,
-    id: String,
     path: String,
 }
 
@@ -24,12 +22,26 @@ struct Args {
 fn main() -> Result<(), reqwest::Error> {
     let args = Args::parse();
 
+    let new_wallpapers = get_new_wallpapers().unwrap();
+    let picked_wallpaper = new_wallpapers.data.choose(&mut rand::thread_rng()).unwrap();
+    let path = download_image(&picked_wallpaper.path).unwrap();
+
+    if args.download_only {
+        return Ok(());
+    }
+
+    set_wallpaper(path);
+
+    Ok(())
+}
+
+fn get_new_wallpapers() -> Result<Wallpapers, reqwest::Error> {
     let api_url = "https://wallhaven.cc/api/v1/search";
-    let walls: Wallpapers = reqwest::blocking::get(api_url)?.json()?;
+    Ok(reqwest::blocking::get(api_url)?.json()?)
+}
 
-    let picked_wallpaper = walls.data.choose(&mut rand::thread_rng()).unwrap();
-
-    let extension = &picked_wallpaper.path[picked_wallpaper.path.len() - 3..];
+fn download_image(path: &String) -> Result<String, reqwest::Error> {
+    let extension = &path[path.len() - 3..];
 
     let image_format: image::ImageFormat = match extension {
         "png" => image::ImageFormat::Png,
@@ -37,29 +49,18 @@ fn main() -> Result<(), reqwest::Error> {
         _ => image::ImageFormat::Jpeg,
     };
 
-    let img_bytes = reqwest::blocking::get(&picked_wallpaper.path)?.bytes()?;
+    let img_bytes = reqwest::blocking::get(path)?.bytes()?;
     let wallpaper_path = format!("wallpaper.{}", extension);
     image::load_from_memory(&img_bytes)
         .unwrap()
         .save_with_format(&wallpaper_path, image_format)
         .unwrap();
 
-    if args.download_only {
-        return Ok(());
-    }
+    Ok(wallpaper_path)
+}
 
-    let full_wallpaper_path = format!(
-        "{}\\{}",
-        std::env::current_dir().unwrap().display(),
-        wallpaper_path
-    );
+fn set_wallpaper(path: String) {
+    let path = format!("{}\\{}", std::env::current_dir().unwrap().display(), path);
 
-    wallpaper::set_from_path(&full_wallpaper_path).unwrap();
-
-    println!(
-        "Set the following wallpaper: {} - {} - {}",
-        picked_wallpaper.id, picked_wallpaper.purity, picked_wallpaper.path
-    );
-
-    Ok(())
+    wallpaper::set_from_path(&path).unwrap();
 }
