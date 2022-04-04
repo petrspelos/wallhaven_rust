@@ -22,9 +22,10 @@ struct Args {
 fn main() -> Result<(), reqwest::Error> {
     let args = Args::parse();
 
-    let new_wallpapers = get_new_wallpapers().unwrap();
-    let picked_wallpaper = new_wallpapers.data.choose(&mut rand::thread_rng()).unwrap();
-    let path = download_image(&picked_wallpaper.path).unwrap();
+    let mut path = String::new();
+    get_random_wallpaper_path(&mut path);
+
+    println!("{}", path);
 
     if args.download_only {
         return Ok(());
@@ -33,6 +34,12 @@ fn main() -> Result<(), reqwest::Error> {
     set_wallpaper(path);
 
     Ok(())
+}
+
+fn get_random_wallpaper_path(path: &mut String) {
+    let new_wallpapers = get_new_wallpapers().unwrap();
+    let picked_wallpaper = new_wallpapers.data.choose(&mut rand::thread_rng()).unwrap();
+    path.push_str(&download_image(&picked_wallpaper.path).unwrap());
 }
 
 fn get_new_wallpapers() -> Result<Wallpapers, reqwest::Error> {
